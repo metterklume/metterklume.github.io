@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "Solving a Calendar Puzzle with Dancing Links"
+title:  "A Calendar Puzzle, Dancing Links and Algorithm X"
 date:   2024-12-24 10:52:48 +0530
-categories: 
+categories: puzzle
 ---
 
 A few months back we were gifted an interesting puzzle by a friend.
