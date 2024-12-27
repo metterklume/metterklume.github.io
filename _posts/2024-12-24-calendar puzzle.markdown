@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "A Calendar Puzzle, Dancing Links and Algorithm X"
+title:  "A Calendar Puzzle and Dancing Links"
 date:   2024-12-24 10:52:48 +0530
 categories: puzzle
 ---
