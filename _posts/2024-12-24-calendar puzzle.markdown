@@ -9,13 +9,15 @@ A few months back we were gifted an interesting puzzle by a friend.
 
 <img src="/assets/images/calendar_set.jpg" alt="The puzzle" width="500" style="display: block; margin: 0 auto;">
 
-The puzzle, available for sale [here](https://www.cubelelo.com/collections/drift/products/drift-weekday-calendar-puzzle), consists of a grid of squares marked with the 12 months and 31 days of the calendar. The goal is to place the 8 jigsaw pieces so they cover all squares **except** the current date. Seven of the pieces are in the shape of [pentominoes](https://en.wikipedia.org/wiki/Pentomino) covering 5 squares, while the eighth is a solid block of 6 squares. You are allowed to rotate and flip the pieces as you wish. 
+Available for sale [here](https://www.cubelelo.com/collections/drift/products/drift-weekday-calendar-puzzle), the puzzle consists of a grid of squares marked with the 12 months and 31 days of the calendar. The goal is to place the 8 jigsaw pieces so they cover all squares **except** the current date. Seven of the pieces are in the shape of a [pentomino](https://en.wikipedia.org/wiki/Pentomino) covering five squares each, while the eighth is a solid block of six squares. You are allowed to rotate and flip the pieces as you wish. 
 
 <img src="/assets/images/jan-1-puzzle.jpg" alt="A solution for Jan 1" width="500" style="display: block; margin: 0 auto;">
 
-The beauty of this simple construction is that you must try afresh everyday - you cannot just slide a couple of pieces to go from one date to the next. It is certainly not obvious that the puzzle can actually be solved for each day of the year. 
+The beauty of this simple construction is that every day is a brand new puzzle. You cannot simply slide a couple of pieces to go from one date to the next. Indeed, it is not obvious that the puzzle can even be solved for each day of the year. 
 
-Having played with it for a few days, I decided to try and write a solver that could generate the configurations(s) for a particular date. I first thought of mimicking the human approach of putting pieces one by one till one reaches a dead-end, then backtracking by removing a couple of pieces and trying again. In Python(ish) pseudocode:
+Having played with it for a few days, I decided to try and write a solver that could generate the configurations(s) for a particular date. The rest of this post describes how I went about it; the final code is available in this [repository](https://github.com/metterklume/calendar-algorithm-x) as a Python notebok.  
+
+I first thought of mimicking the human approach of trial and error. Add pieces one by one till you reach a dead-end, then backtrack by removing a couple of pieces and try again. In Python(ish) pseudocode:
 
 {% highlight python %}
 def solve(board, target, working_solution=[]):
@@ -39,25 +41,28 @@ def solve(board, target, working_solution=[]):
 
 This is not *wrong* as it stands but a few devils lurk in the details. Getting the remaining pieces is simple enough, but what about `get_valid_positions`? Once we choose a move i.e. place a piece on the grid, some moves that were valid earlier are eliminated because the next piece cannot overlap with the current one. However several other moves might still remain valid. Instead of exploiting this pattern, we repeat bits of the same work over and over again. One wonders if such a program would terminate in a reasonable time.
 
-As it happens, I had just come across Donald Knuth's [Christmas lecture](https://www.youtube.com/watch?v=_cR9zDlvP88) and [paper](https://arxiv.org/abs/cs/0011047) on his [Dancing Links](https://en.wikipedia.org/wiki/Dancing_Links) algorithm. He shows that problems like our puzzle, Sudoku, [Eight Queens](https://en.wikipedia.org/wiki/Eight_queens_puzzle) and many others can be thought of as [*exact cover*](https://en.wikipedia.org/wiki/Exact_cover). A precise definition can be found in his lecture and wikipedia but the gist should become clear as we work through our own example. 
+As it happens, I had just come across Donald Knuth's [Christmas lecture](https://www.youtube.com/watch?v=_cR9zDlvP88) and [paper](https://arxiv.org/abs/cs/0011047) on his [Dancing Links](https://en.wikipedia.org/wiki/Dancing_Links) algorithm. He shows that many puzzles with rigid overlapping constraints can framed as [*exact cover*](https://en.wikipedia.org/wiki/Exact_cover) problems. Sudoku and [Eight Queens](https://en.wikipedia.org/wiki/Eight_queens_puzzle) also belong to the same family.   
 
 Knuth's paper has two parts:
 1. A reformulation of the question into a matrix that treats the possibilities and constraints on an equal footing. He calls this [Algorithm X](https://en.wikipedia.org/wiki/Knuth%27s_Algorithm_X).
 2. A representation of this sparse matrix in terms of doubly linked lists which makes it easy to solve recursively.
 
-For our solver we will use the first part. Instead of linked lists which are overkill for this problem, regular arrays will suffice to implement Algorithm X. We do have to be careful in avoid dead-ends and not repeating solutions (more on this later).
+For our solver we will use the first part. Instead of linked lists which are overkill for this problem, regular arrays will suffice to implement Algorithm X. We do have to be careful in avoiding dead-ends and not repeating solutions (more on this later).
 
 ## Matrix M and Algorithm X
 
+In this section we will see how all the data and constraints in our puzzle can be distilled into a single matrix.
+
 Consider what happens when make a move and place a piece on the grid:
-1. The piece cannot be reused.
-2. The squares that it covers, cannot be touched again.
+- The piece cannot be reused.
+- The squares that it covers, cannot be touched again.
 
-Each **move** on the empty grid corresponds to a unique **row** in the matrix *M* that we will construct. Moves of the same piece placed with different orientations corresponds to different rows. 
+Correspondingly, in our matrix M:
+- Each row represents one way to place a piece on the board.
+- Each column represents either a square that needs to be covered or a piece that we can use.
+- A 1 in the matrix means "this move covers this square" or "this move uses this piece". Why combine these two notions? Since both are possibilities that have been eliminated by the move, we use columns keep track of them together. This is Knuth's remarkable insight.
 
-The columns denote the squares to be covered **and** the pieces at our disposal. Why combine these two? Both 1 & 2 are possibilities that are successively eliminated with each move, and the columns keep track of them together. This is Knuth's remarkable insight.
-
-To understand how *M* works, let us being with a simple example. 
+To understand how this works, let us look at a simple example. 
 <figure>
 <img src="/assets/images/calendar-row-column.png" alt="Example of row and columns" width="500" style="display: block; margin: 0 auto;"/>
 <figcaption> The grid has 8 squares which we number left to right and bottom to top. There two unique pieces. The number of columns is <italic>squares + unique pieces</italic> = 8+2 = 10. 
@@ -105,7 +110,7 @@ solve(M, moves)
 {% endhighlight %}
 
 ## Coding it up
-I will use Python and Numpy as those are what I know best. I present some of the code in snippets - the complete solution along with plotting functions (very important for debugging!) can be found this repository. 
+I will use Python and Numpy as those are what I know best. I present some of the code in snippets - the complete solution along with accompanying functions to plot solutions (very important for debugging!) can be found this (repository)[https://github.com/metterklume/calendar-algorithm-x]. 
 
 Some Numpy idioms might be a bit opaque to the uninitiated. Ignore them at first reading as long as the purpose makes sense.
 
@@ -369,7 +374,6 @@ It seems that these are the only unsolveable problems. However there is one prob
 <figure>
 <img src="/assets/images/unique.png" alt="Unique" width="500" style="display: block; margin: 0 auto;"/>
 </figure>
-
 
 
 
