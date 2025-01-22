@@ -13,7 +13,7 @@ Available for sale [here](https://www.cubelelo.com/collections/drift/products/dr
 
 <img src="/assets/images/jan-1-puzzle.jpg" alt="A solution for Jan 1" width="500" style="display: block; margin: 0 auto;">
 
-The beauty of this simple construction is that every day is a brand new puzzle. You cannot simply slide a couple of pieces to go from one date to the next. Indeed, it is not obvious that the puzzle can even be solved for each day of the year. 
+The beauty of this simple construction is that every day brings a fresh new puzzle. You cannot simply adjust a couple of pieces to go from one date to the next. Indeed, it is not obvious that the puzzle can even be solved for each day of the year. 
 
 Having played with it for a few days, I decided to try and write a solver that could generate the configurations(s) for a particular date. The rest of this post describes how I went about it; the final code is available in this [repository](https://github.com/metterklume/calendar-algorithm-x) as a Python notebok.  
 
